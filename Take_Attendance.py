@@ -1,48 +1,78 @@
 import streamlit as st
 import os
 import datetime
-import Identify
+from utils.Identify import AttendanceSystem
 
-def giveSuccess(s):
-    st.success(s)
+class AttendanceTaker:
+    def __init__(self):
+        pass
 
-def create_file(uploaded_file, save_path):
-    time = datetime.datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
-    file_name = f'{time}.{uploaded_file.name.split(".")[-1]}'
+    def give_success(self, s):
+        """
+        Display a success message.
 
-    file_path = os.path.join('captured_images', save_path)
-    if not os.path.exists(file_path):
-        os.makedirs(file_path)
+        Args:
+        - s: Success message to be displayed.
 
-    file_path = os.path.join(file_path, file_name)
-    with open(file_path, "wb") as file:
-        file.write(uploaded_file.getbuffer())
+        Returns:
+        - None
+        """
+        st.success(s)
 
-    giveSuccess(f"File '{file_name}' uploaded'")
-    return file_path
+    def create_file(self, uploaded_file, save_path):
+        """
+        Create a file from the uploaded file buffer and save it to the specified path.
 
-def take_attendance():
-    st.title("ATTENDANCE")
+        Args:
+        - uploaded_file: Uploaded file object.
+        - save_path: Path where the file should be saved.
 
-    branch = st.text_input("Course Branch")
-    branch = branch.upper()
+        Returns:
+        - File path of the saved file.
+        """
+        time = datetime.datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
+        file_name = f'{time}.{uploaded_file.name.split(".")[-1]}'
 
-    sec = st.text_input("Course Section")
-    sec = sec.upper()
+        file_path = os.path.join('captured_images', save_path)
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
 
-    uploaded_file = st.file_uploader(
-        "Upload Classroom Image", 
-        type = ["jpg", "jpeg", "png", "HEIC"]
+        file_path = os.path.join(file_path, file_name)
+        with open(file_path, "wb") as file:
+            file.write(uploaded_file.getbuffer())
+
+        self.give_success(f"File '{file_name}' uploaded'")
+        return file_path
+
+    def take_attendance(self):
+        """
+        Main function for taking attendance.
+
+        Returns:
+        - None
+        """
+        st.title("ATTENDANCE")
+        branch = st.text_input("Course Branch").lower()
+        sec = st.text_input("Course Section").lower()
+        uploaded_file = st.file_uploader(
+            "Upload Classroom Image", 
+            type=["jpg", "jpeg", "png", "HEIC"]
         )
 
-    if uploaded_file is None or not branch or not sec:
-        st.error("Each field is required.")
-        return
-    
-    branch_path = os.path.join(branch, sec)
-    file_path = create_file(uploaded_file, branch_path)
+        if uploaded_file is None or not branch or not sec:
+            st.error("Each field is required.")
+            return
+        
+        branch_path = os.path.join(branch, sec)
+        file_path = self.create_file(uploaded_file, branch_path)
 
-    if st.button("Take Attendance"):
-        Identify.recognize(branch_path, file_path)
+        if st.button("Take Attendance"):
+            self.recognize_and_update_attendance(branch_path, file_path)
 
-take_attendance()
+    def recognize_and_update_attendance(self, branch_path, file_path):
+        recognize = AttendanceSystem()
+        person_list = recognize.recognize_faces(branch_path, file_path)
+        recognize.update_attendance(person_list, file_path)
+
+attendance_taker = AttendanceTaker()
+attendance_taker.take_attendance()
