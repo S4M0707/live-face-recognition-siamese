@@ -2,6 +2,8 @@ import os
 import pandas as pd
 import streamlit as st
 from deepface import DeepFace
+import cv2
+from PIL import Image
 
 class AttendanceSystem:
     def __init__(self, attendance_file = 'attendance.csv'):
@@ -64,15 +66,23 @@ class AttendanceSystem:
         recognition = DeepFace.find(file_path, reference_path, detector_backend='retinaface')
 
         person_list = []
+        face_rect_list = []
         for person in recognition:
+            rect = {
+                'x' : person.source_x[0],
+                'y' : person.source_y[0],
+                'w' : person.source_w[0],
+                'h' : person.source_h[0]
+                }
             person_path = person.identity[0]
             person_path = os.path.split(person_path)[0]
             person_path = os.path.split(person_path)[-1]
             person_list.append(person_path)
+            face_rect_list.append(rect)
         
-        return person_list
+        return person_list, face_rect_list
 
-    def update_attendance(self, person_list, file_path):
+    def update_attendance(self, person_list, face_rect_list, file_path):
         """
         Update attendance data and display it.
 
@@ -83,8 +93,28 @@ class AttendanceSystem:
         Returns:
         - None
         """
+        self.create_output_image(face_rect_list, file_path, person_list)
         data = self.save_to_db(person_list, file_path)
         self.show_attendance(data)
+
+    def create_output_image(self, face_rect_list, file_path, person_list):
+        image = cv2.imread(file_path)
+        for idx, rect in enumerate(face_rect_list):
+            x = rect['x']
+            y = rect['y']
+            w = rect['w']
+            h = rect['h']
+
+            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 5)
+            name = person_list[idx]
+            text_location = (x, y + h + 100)
+            font_scale = 5
+            cv2.putText(image, name, text_location, cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 255, 0), 10)
+
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image_pil = Image.fromarray(image_rgb)
+
+        st.image(image_pil, caption='Face with Rectangle and Name', use_column_width=True)
 
     def face_detected(self, img):
         """

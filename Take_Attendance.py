@@ -63,8 +63,8 @@ class AttendanceTaker:
 
     def recognize_and_update_attendance(self, file_path):
         branch_path = os.path.join(self.branch, self.sec)
-        person_list = self.recognize.recognize_faces(branch_path, file_path)
-        self.recognize.update_attendance(person_list, file_path)
+        person_list, face_rect_list = self.recognize.recognize_faces(branch_path, file_path)
+        self.recognize.update_attendance(person_list, face_rect_list, file_path)
 
 attendance_taker = AttendanceTaker()
 attendance_taker.take_attendance()

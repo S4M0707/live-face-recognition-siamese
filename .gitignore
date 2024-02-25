@@ -3,6 +3,8 @@ Untitled.ipynb
 face_dataset.zip
 
 database/*
+captured_images/*
+x.jpg
 
 .ipynb_checkpoints
 __pycache__
