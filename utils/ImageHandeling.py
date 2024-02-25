@@ -2,24 +2,61 @@ import os
 import datetime
 import cv2
 import streamlit as st
-from utils.Identify import AttendanceSystem
+from utils.Identify import IdentificationSystem
 
 class ImageHandle:
     def __init__(self, output_path) -> None:
-        self.face_detection = AttendanceSystem().face_detected
+        """
+        Initialize ImageHandle object.
+
+        Args:
+        - output_path: Path to the output directory.
+
+        Returns:
+        - None
+        """
+        self.face_detection = IdentificationSystem().face_detected
         self.database_path = output_path
     
     def set_branch_sec_path(self, branch, sec):
+        """
+        Set the path for the branch and section.
+
+        Args:
+        - branch: Branch name.
+        - sec: Section name.
+
+        Returns:
+        - None
+        """
         if branch is None or sec is None:
             return
         self.branch_sec_path = os.path.join(self.database_path, branch, sec)
     
     def set_db_name_path(self, name):
+        """
+        Set the path for the database name.
+
+        Args:
+        - name: Database name.
+
+        Returns:
+        - None
+        """
         if name is None:
             return
         self.db_name_path = os.path.join(self.branch_sec_path, name)
     
     def save_uploaded_file(self, uploaded_file):
+        """
+        Save the uploaded file to the output directory.
+
+        Args:
+        - uploaded_file: Uploaded file object.
+
+        Returns:
+        - File path of the saved file.
+        """
         time = datetime.datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
         file_name = f'{time}.{uploaded_file.name.split(".")[-1]}'
 
@@ -34,15 +71,33 @@ class ImageHandle:
         return file_path
     
     def handle_camera(self):
+        """
+        Capture image from camera and save it to the output directory.
+
+        Returns:
+        - None
+        """
         self.create_directories()
         self.capture_image()
     
     def create_directories(self):
+        """
+        Create directories for storing images.
+
+        Returns:
+        - None
+        """
         curr_pth = self.db_name_path if self.database_path == 'database' else self.branch_sec_path
         if not os.path.exists(curr_pth):
             os.makedirs(curr_pth)
 
     def capture_image(self):
+        """
+        Capture image from camera.
+
+        Returns:
+        - None
+        """
         capture = cv2.VideoCapture(0)
 
         if not capture.isOpened():
@@ -81,6 +136,15 @@ class ImageHandle:
         cv2.destroyAllWindows()
 
     def save_image(self, image):
+        """
+        Save captured image to the output directory.
+
+        Args:
+        - image: Captured image as a numpy array.
+
+        Returns:
+        - None
+        """
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         time = datetime.datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
         image_path = os.path.join(
