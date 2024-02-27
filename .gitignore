@@ -4,7 +4,7 @@ face_dataset.zip
 
 database/*
 captured_images/*
-x.jpg
+x.jpeg
 
 .ipynb_checkpoints
 __pycache__

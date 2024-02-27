@@ -17,6 +17,15 @@ class IdentificationSystem:
         - None
         """
         self.database_path = database_path
+        self.selected_backend = None
+        self.backend_map = {
+            "Fastest" : 'ssd', 
+            "Middle" : 'mtcnn', 
+            "Most Accurate" : 'retinaface'
+            }
+
+    def receive_backend(self, option):
+        self.selected_backend = self.backend_map[option]
 
     def save_to_db(self, person_list, file_path):
         """
@@ -70,7 +79,7 @@ class IdentificationSystem:
         data = self.save_to_db(person_list, file_path)
         self.show_database(data)
 
-    def recognize_faces(self, branch_path, file_path):
+    def recognize_faces(self, branch_path, file_path = None, img = None):
         """
         Recognize faces in the uploaded image.
 
@@ -82,10 +91,19 @@ class IdentificationSystem:
         - Tuple containing lists of recognized persons and their face rectangle coordinates.
         """
         reference_path = os.path.join('database', branch_path)
-        recognition = DeepFace.find(file_path, reference_path, detector_backend='retinaface')
+        recognition = DeepFace.find(
+            file_path if file_path is not None else img, 
+            reference_path, 
+            detector_backend=self.selected_backend,
+            enforce_detection=False
+            )
 
         person_list = []
         face_rect_list = []
+
+        if len(recognition[0]) <= 0:
+            return person_list, face_rect_list
+
         for person in recognition:
             rect = {
                 'x' : person.source_x[0],
@@ -120,11 +138,11 @@ class IdentificationSystem:
             w = rect['w']
             h = rect['h']
 
-            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 5)
+            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
             name = person_list[idx]
-            text_location = (x, y + h + 100)
-            font_scale = 5
-            cv2.putText(image, name, text_location, cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 255, 0), 10)
+            text_location = (x, y + h + 20)
+            font_scale = 1
+            cv2.putText(image, name, text_location, cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 255, 0), font_scale * 2)
 
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image_pil = Image.fromarray(image_rgb)

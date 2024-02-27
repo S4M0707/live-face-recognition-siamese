@@ -15,7 +15,8 @@ class ImageHandle:
         Returns:
         - None
         """
-        self.face_detection = IdentificationSystem().face_detected
+        self.identification_system = IdentificationSystem()
+        self.face_detection = self.identification_system.face_detected
         self.database_path = output_path
     
     def set_branch_sec_path(self, branch, sec):
