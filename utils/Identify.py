@@ -91,33 +91,35 @@ class IdentificationSystem:
         - Tuple containing lists of recognized persons and their face rectangle coordinates.
         """
         reference_path = os.path.join('database', branch_path)
-        recognition = DeepFace.find(
-            file_path if file_path is not None else img, 
-            reference_path, 
-            detector_backend=self.selected_backend,
-            enforce_detection=False
-            )
+        try:
+            recognition = DeepFace.find(
+                file_path if file_path is not None else img, 
+                reference_path, 
+                detector_backend=self.selected_backend,
+                )
 
-        person_list = []
-        face_rect_list = []
+            person_list = []
+            face_rect_list = []
 
-        if len(recognition[0]) <= 0:
+            # if len(recognition[0]) <= 0:
+            #     return person_list, face_rect_list
+
+            for person in recognition:
+                rect = {
+                    'x' : person.source_x[0],
+                    'y' : person.source_y[0],
+                    'w' : person.source_w[0],
+                    'h' : person.source_h[0]
+                    }
+                person_path = person.identity[0]
+                person_path = os.path.split(person_path)[0]
+                person_path = os.path.split(person_path)[-1]
+                person_list.append(person_path)
+                face_rect_list.append(rect)
+            
             return person_list, face_rect_list
-
-        for person in recognition:
-            rect = {
-                'x' : person.source_x[0],
-                'y' : person.source_y[0],
-                'w' : person.source_w[0],
-                'h' : person.source_h[0]
-                }
-            person_path = person.identity[0]
-            person_path = os.path.split(person_path)[0]
-            person_path = os.path.split(person_path)[-1]
-            person_list.append(person_path)
-            face_rect_list.append(rect)
-        
-        return person_list, face_rect_list
+        except:
+            return [], []
 
     def create_output_image(self, face_rect_list, file_path, person_list):
         """
